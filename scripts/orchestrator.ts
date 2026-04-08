@@ -13,7 +13,7 @@
  */
 
 import { writeFileSync, existsSync, mkdirSync, rmSync, openSync, closeSync } from "node:fs";
-import { join, dirname } from "node:path";
+import { join, dirname, resolve } from "node:path";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -119,9 +119,45 @@ function parseArgs(): OrchestratorConfig {
 
 // ─── Workspace Setup ─────────────────────────────────────────────────────────
 
-function setupWorkspace(personas: string[]): string {
-  const projectRoot = dirname(import.meta.dir);
-  const workDir = join(projectRoot, ".eval-reviewer");
+function setupWorkspace(personas: string[], target: string): string {
+  // Derive the project root from the target path.
+  // If target is an existing file/directory, use its parent/itself.
+  // Otherwise, walk up from the skill's own directory to find the project root.
+  let projectRoot: string;
+  if (existsSync(target)) {
+    const f = Bun.file(target);
+    if (f.size > 0 && f.size < 10_000_000) {
+      // Target is a file — use its parent directory
+      projectRoot = dirname(resolve(target));
+    } else {
+      // Target is a directory
+      projectRoot = resolve(target);
+    }
+  } else {
+    // Target is inline content or not a path — derive project root from skill location.
+    // The skill may be installed inside the project (e.g. .agents/skills/eval-reviewer/),
+    // so walk up until we find a recognizable project root.
+    let dir = dirname(import.meta.dir); // skill directory
+    const markers = ['package.json', 'pyproject.toml', 'Cargo.toml', 'go.mod', '.git'];
+    for (let depth = 0; depth < 10; depth++) {
+      if (markers.some(m => existsSync(join(dir, m)))) {
+        projectRoot = dir;
+        break;
+      }
+      const parent = dirname(dir);
+      if (parent === dir) {
+        // Reached filesystem root
+        projectRoot = process.cwd();
+        break;
+      }
+      dir = parent;
+    }
+    if (!projectRoot) {
+      projectRoot = process.cwd();
+    }
+  }
+
+  const workDir = join(projectRoot, ".review");
 
   mkdirSync(workDir, { recursive: true });
 
@@ -424,7 +460,7 @@ async function main() {
   console.log(`╚══════════════════════════════════════════╝\n`);
 
   // 1. Setup workspace
-  const workDir = setupWorkspace(config.personas);
+  const workDir = setupWorkspace(config.personas, config.target);
   console.log(`  Workspace: ${workDir}\n`);
 
   // 2. Spawn agents

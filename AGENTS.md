@@ -20,7 +20,7 @@ You are the **orchestrator** for a multi-agent code review system. Your job is t
 The default strategy uses `qwen` CLI in headless mode to run each reviewer as an independent process. Each agent:
 - Receives its persona-specific prompt from `references/{persona}.md`
 - Gets the full diff/code to review
-- Writes its findings to `.eval-reviewer/{persona}/done.json`
+- Writes its findings to `.review/{persona}/done.json`
 - Runs in parallel — no waiting for other agents
 
 The orchestrator handles:
