@@ -1,0 +1,5 @@
+# Agent output (generated at runtime)
+.eval-reviewer/
+
+# Bun
+node_modules/

@@ -1,0 +1,49 @@
+{
+  "persona": "performance",
+  "status": "done",
+  "findings": [
+    {
+      "severity": "high",
+      "file": "src/routes/users.ts",
+      "line": 8,
+      "message": "Unbounded query on /users endpoint — fetches ALL users without pagination, limit, or cursor. Will cause memory issues and slow responses as the users table grows.",
+      "suggestion": "Add pagination with `take` and `skip` (cursor-based or offset-based). Example: `prisma.user.findMany({ take: 50, skip: cursor ? 1 : 0, cursor: cursor ? { id: cursor } : undefined })`"
+    },
+    {
+      "severity": "high",
+      "file": "src/routes/users.ts",
+      "line": 8,
+      "message": "Missing select specificity — `findMany()` without `select` or `include` returns ALL columns, including potentially large fields (passwords, avatars, etc.). Increases payload size and memory usage.",
+      "suggestion": "Use `select` to return only needed fields: `prisma.user.findMany({ select: { id: true, name: true, email: true } })`"
+    },
+    {
+      "severity": "medium",
+      "file": "src/config/db.ts",
+      "line": 4,
+      "message": "Verbose query logging enabled in config (`log: ['query', 'info', 'warn', 'error']`). Logging every query will cause significant I/O overhead in production and can fill disk space rapidly.",
+      "suggestion": "Use environment-based log levels. In production, log only `['warn', 'error']` or use sampling. Example: `log: process.env.NODE_ENV === 'production' ? ['warn', 'error'] : ['query', 'info', 'warn', 'error']`"
+    },
+    {
+      "severity": "medium",
+      "file": "src/routes/users.ts",
+      "line": 13,
+      "message": "POST /users has no input validation or size limits before DB insert. Large payloads or missing field validation will cause slow inserts and potential DB constraint issues.",
+      "suggestion": "Add request validation (e.g., zod) and payload size limits before passing to Prisma. Validate required fields and data types."
+    },
+    {
+      "severity": "low",
+      "file": "src/utils/auth.ts",
+      "line": 3,
+      "message": "jwt.decode() is synchronous and does not verify signature. If this is meant for authentication, it's insecure. If used in a hot path, repeated decoding without caching adds CPU overhead.",
+      "suggestion": "If signature verification is needed, use `jwt.verify()` with async. If decoding is frequent for the same tokens, consider short-lived caching."
+    },
+    {
+      "severity": "low",
+      "file": "src/config/db.ts",
+      "line": 3,
+      "message": "Single PrismaClient instance with no connection pool configuration. Default pool size may not be optimal for production load, and there's no graceful shutdown handling to close connections.",
+      "suggestion": "Configure connection pool size via Prisma connection URL parameters and add `prisma.$disconnect()` on process shutdown. Consider lazy instantiation pattern."
+    }
+  ],
+  "verdict": "contest"
+}
