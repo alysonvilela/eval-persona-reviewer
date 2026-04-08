@@ -12,6 +12,8 @@
     "review:security": "bun scripts/orchestrator.ts --personas security"
   },
   "devDependencies": {
-    "@types/bun": "latest"
+    "@types/bun": "latest",
+    "dotenv": "^8.2.0",
+    "node-fetch": "^3.3.2"
   }
 }

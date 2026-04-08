@@ -44,17 +44,17 @@ bun scripts/orchestrator.ts /path/to/diff.md
 ## How It Works
 
 1. **Spawn** — Orchestrator launches each persona as an independent agent via the configured spawn strategy (default: `qwen` CLI headless)
-2. **Wait** — Orchestrator polls for `done.json` completion hooks in `.eval-reviewer/{persona}/`
+2. **Wait** — Orchestrator polls for `done.json` completion hooks in `.review/{persona}/`
 3. **Merge** — All findings are deduplicated, ranked by severity, and compiled into a unified report
 4. **Verdict** — Output: PASS (all clean), CONTESTED (mixed findings), or REJECT (critical issues)
 
 ## Output Format
 
 The orchestrator writes results to:
-- `.eval-reviewer/report.md` — Full markdown report with all findings
-- `.eval-reviewer/verdict.json` — Structured verdict with severity breakdown
+- `.review/report.md` — Full markdown report with all findings
+- `.review/verdict.json` — Structured verdict with severity breakdown
 
-Each agent writes to `.eval-reviewer/{persona}/done.json`:
+Each agent writes to `.review/{persona}/done.json`:
 ```json
 {
   "persona": "skeptic",
